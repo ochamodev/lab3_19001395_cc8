@@ -1,0 +1,1 @@
+for i in {1..10000}; do curl -s http://127.0.0.1:1850; done
