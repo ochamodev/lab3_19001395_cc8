@@ -1,15 +1,19 @@
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.nio.Buffer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class FileUtils {
 
-    public static boolean checkIfFileExists(String filePath) {
+    public static boolean checkIfFileExists(String filePath, Logger logger) {
         try {
+            String currentWorkingDir = System.getProperty("user.dir");
+            logger.log(Level.INFO, "Current Working Directory: " + currentWorkingDir);
             File file = new File(filePath);
             return file.exists();
         } catch (Exception e) {
+            logger.log(Level.INFO, e.getMessage());
             return false;
         }
     }

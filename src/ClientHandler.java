@@ -10,6 +10,8 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+import java.util.HashMap;
+import java.util.Map;
 
 import static java.lang.System.err;
 import static java.lang.System.out;
@@ -37,16 +39,29 @@ public class ClientHandler implements Runnable {
 
             String requestLine;
             StringBuilder requestBuilder = new StringBuilder();
+            Map<String, String> headers = new HashMap<>();
             while ((requestLine = reader.readLine()) != null && !requestLine.isEmpty()) {
-            	requestBuilder.append(requestLine).append("\n");
+                String[] headerParts = requestLine.split(":");
+                if (headerParts.length == 2) {
+                    headers.put(headerParts[0].trim(), headerParts[1].trim());
+                }
+                requestBuilder.append(requestLine).append("\n");
             }
 
+            int contentLength = Integer.parseInt(headers.getOrDefault("Content-Length", "0"));
+            char[] reqBody = new char[contentLength];
+
+            reader.read(reqBody);
+            String requestBodyString = new String(reqBody);
             LOGGER.log(Level.INFO, "[Request]\n\r" + requestBuilder.toString().trim()); 
+            LOGGER.log(Level.INFO, "[RequestBody]" + requestBodyString);
             var reqHandler = new RequestHandler(LOGGER);
             var reqObj = reqHandler.handleRequest(requestBuilder.toString().trim()); 
             var responseGenerator = new ResponseHandler(LOGGER);
 
-            writer.println("HTTP/1.1 200 OK\r\n\r\nHello, world!");
+            var response = responseGenerator.createResponse(reqObj);
+            LOGGER.log(Level.INFO, "[response] \n" + response);
+            writer.println(response);
             
             
             reader.close();
