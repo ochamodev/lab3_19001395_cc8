@@ -35,7 +35,8 @@ public class ClientHandler implements Runnable {
     public void run() {
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
+            var outputStream = clientSocket.getOutputStream();
+            PrintWriter writer = new PrintWriter(outputStream, true);
 
             String requestLine;
             StringBuilder requestBuilder = new StringBuilder();
@@ -59,11 +60,12 @@ public class ClientHandler implements Runnable {
             var reqObj = reqHandler.handleRequest(requestBuilder.toString().trim()); 
             var responseGenerator = new ResponseHandler(LOGGER);
 
-            var response = responseGenerator.createResponse(reqObj);
-            LOGGER.log(Level.INFO, "[response] \n" + response);
-            writer.println(response);
-            
-            
+            var response = responseGenerator.createResponse(reqObj, requestBodyString);
+            LOGGER.log(Level.INFO, "[response] \n" + response.getResponseString());
+            writer.println(response.getResponseString());
+            if (response.getResponseBody() != null) {
+                outputStream.write(response.getResponseBody());
+            }
             reader.close();
             writer.close();
             clientSocket.close();
